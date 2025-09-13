@@ -33,6 +33,15 @@ def admin_only(f):
         return f(*args,**kwargs)
     return decorated_function
 
+def only_commenter(function):
+    @wraps(function)
+    def check(*args, **kwargs):
+        user = db.session.execute(db.select(Comment).where(Comment.author_id == current_user.id)).scalar()
+        if not current_user.is_authenticated or current_user.id != user.author_id:
+            return abort(403)
+        return function(*args, **kwargs)
+    return check
+
 
 # CREATE DATABASE
 class Base(DeclarativeBase):
@@ -221,6 +230,15 @@ def delete_post(post_id):
     db.session.delete(post_to_delete)
     db.session.commit()
     return redirect(url_for('get_all_posts'))
+
+
+@app.route("/delete/comment/<int:comment_id>/<int:post_id>")
+@only_commenter
+def delete_comment(post_id, comment_id):
+    post_to_delete = db.get_or_404(Comment, comment_id)
+    db.session.delete(post_to_delete)
+    db.session.commit()
+    return redirect(url_for('show_post', post_id=post_id))
 
 
 @app.route("/about")
