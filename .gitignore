@@ -1,6 +1,8 @@
 posts.db
 .venv
+.env
 .idea
 __pycache__
 .DS_Store
 .gitignore
+Procfile
